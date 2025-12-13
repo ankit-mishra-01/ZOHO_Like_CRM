@@ -1,13 +1,21 @@
 import React from 'react';
 import { Users, DollarSign, TrendingUp, CheckCircle } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useStore } from '../store/useStore';
 
 const Dashboard = () => {
+  const { contacts, deals, tasks } = useStore();
+  
+  const activeContacts = contacts.filter(c => c.status === 'Active').length;
+  const totalDealsValue = deals.reduce((sum, deal) => sum + deal.value, 0);
+  const completedTasks = tasks.filter(t => t.completed).length;
+  const conversionRate = deals.length > 0 ? ((deals.filter(d => d.stage === 'Closed Won').length / deals.length) * 100).toFixed(1) : '0';
+
   const stats = [
-    { label: 'Total Contacts', value: '2,543', change: '+12%', icon: Users, color: 'bg-blue-500' },
-    { label: 'Active Deals', value: '$124K', change: '+23%', icon: DollarSign, color: 'bg-green-500' },
-    { label: 'Conversion Rate', value: '34.5%', change: '+5%', icon: TrendingUp, color: 'bg-purple-500' },
-    { label: 'Tasks Completed', value: '89', change: '+8%', icon: CheckCircle, color: 'bg-orange-500' },
+    { label: 'Total Contacts', value: contacts.length.toString(), change: `${activeContacts} Active`, icon: Users, color: 'bg-blue-500' },
+    { label: 'Active Deals', value: `$${(totalDealsValue / 1000).toFixed(0)}K`, change: `${deals.length} Deals`, icon: DollarSign, color: 'bg-green-500' },
+    { label: 'Conversion Rate', value: `${conversionRate}%`, change: 'From all deals', icon: TrendingUp, color: 'bg-purple-500' },
+    { label: 'Tasks Completed', value: completedTasks.toString(), change: `${tasks.length} Total`, icon: CheckCircle, color: 'bg-orange-500' },
   ];
 
   const revenueData = [
@@ -20,11 +28,11 @@ const Dashboard = () => {
   ];
 
   const dealsData = [
-    { stage: 'Lead', count: 45 },
-    { stage: 'Qualified', count: 32 },
-    { stage: 'Proposal', count: 28 },
-    { stage: 'Negotiation', count: 15 },
-    { stage: 'Closed', count: 23 },
+    { stage: 'Lead', count: deals.filter(d => d.stage === 'Lead').length },
+    { stage: 'Qualified', count: deals.filter(d => d.stage === 'Qualified').length },
+    { stage: 'Proposal', count: deals.filter(d => d.stage === 'Proposal').length },
+    { stage: 'Negotiation', count: deals.filter(d => d.stage === 'Negotiation').length },
+    { stage: 'Closed', count: deals.filter(d => d.stage === 'Closed Won').length },
   ];
 
   return (
@@ -38,7 +46,7 @@ const Dashboard = () => {
               <div>
                 <p className="text-gray-500 text-sm">{stat.label}</p>
                 <h3 className="text-2xl font-bold text-gray-800 mt-2">{stat.value}</h3>
-                <p className="text-green-500 text-sm mt-1">{stat.change} from last month</p>
+                <p className="text-green-500 text-sm mt-1">{stat.change}</p>
               </div>
               <div className={`${stat.color} p-4 rounded-lg`}>
                 <stat.icon className="text-white" size={24} />
